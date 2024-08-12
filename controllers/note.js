@@ -16,6 +16,7 @@ exports.getNotes = (req, res, next) => {
 
 exports.createNotes = (req, res, next) => {
   const { title, content } = req.body;
+  const profile_img = req.file;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).json({
@@ -26,6 +27,7 @@ exports.createNotes = (req, res, next) => {
   Note.create({
     title,
     content,
+    profile_img: profile_img ? profile_img : undefined,
   })
     .then(() => {
       return res.status(201).json({

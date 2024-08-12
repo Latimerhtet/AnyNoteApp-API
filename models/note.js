@@ -13,6 +13,9 @@ const notesSchema = new Schema(
       required: true,
       minLength: 5,
     },
+    profile_img: {
+      type: String,
+    },
     author: {
       type: String,
       default: "Anonymous",
