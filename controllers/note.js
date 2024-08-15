@@ -1,5 +1,10 @@
 const { validationResult } = require("express-validator");
+
+// note model import
 const Note = require("../models/note");
+
+// utils import
+const { unlink } = require("../utils/unlink");
 exports.getNotes = (req, res, next) => {
   Note.find()
     .sort({ createdAt: -1 })
@@ -27,7 +32,7 @@ exports.createNotes = (req, res, next) => {
   Note.create({
     title,
     content,
-    profile_img: profile_img ? profile_img : undefined,
+    profile_img: profile_img ? profile_img.path : undefined,
   })
     .then(() => {
       return res.status(201).json({
@@ -61,10 +66,17 @@ exports.getNote = (req, res, next) => {
 exports.editNote = (req, res, next) => {
   const { id } = req.params;
   const { title, content } = req.body;
+  const cover_img = req.file;
   Note.findById(id)
     .then((note) => {
       note.title = title;
       note.content = content;
+      if (cover_img) {
+        if (note.profile_img) {
+          unlink(note.profile_img);
+        }
+        note.profile_img = cover_img.path;
+      }
       note.save().then(() => {
         return res.status(201).json({
           message: "Editing success!",
@@ -82,10 +94,13 @@ exports.editNote = (req, res, next) => {
 // deleting a note
 exports.deleteNote = (req, res, next) => {
   const { id } = req.params;
-  Note.findByIdAndDelete(id)
-    .then(() => {
-      res.status(204).json({
-        message: "Deleted successfully",
+  Note.findById(id)
+    .then((note) => {
+      unlink(note.profile_img);
+      return Note.findByIdAndDelete(id).then(() => {
+        return res.status(204).json({
+          message: "Deleted successfully",
+        });
       });
     })
     .catch((err) => {
