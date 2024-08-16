@@ -12,7 +12,7 @@ router.post(
     body("title")
       .isLength({ min: 3 })
       .withMessage("Title is too short")
-      .isLength({ max: 20 })
+      .isLength({ max: 100 })
       .withMessage("Title is too long"),
     body("content").isLength({ min: 5 }).withMessage("Title is too short"),
   ],

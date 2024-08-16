@@ -6,10 +6,21 @@ const Note = require("../models/note");
 // utils import
 const { unlink } = require("../utils/unlink");
 exports.getNotes = (req, res, next) => {
-  Note.find()
-    .sort({ createdAt: -1 })
-    .then((notes) => {
-      return res.status(200).json(notes);
+  const pageNo = req.query.page || 1;
+  const notePerPage = 3;
+  let totalNotes;
+  let totalPages;
+  Note.countDocuments()
+    .then((count) => {
+      totalNotes = count;
+      totalPages = Math.ceil(totalNotes / notePerPage);
+      return Note.find()
+        .sort({ createdAt: -1 })
+        .skip((pageNo - 1) * notePerPage)
+        .limit(notePerPage)
+        .then((notes) => {
+          return res.status(200).json({ notes, totalNotes, totalPages });
+        });
     })
     .catch((err) => {
       console.log(err);
