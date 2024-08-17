@@ -6,6 +6,7 @@ const cors = require("cors");
 const multer = require("multer");
 const bodyparser = require("body-parser");
 const notesRoutes = require("./routes/note");
+const authRoutes = require("./routes/auth");
 const path = require("path");
 // body parser
 app.use(bodyparser.json());
@@ -38,6 +39,7 @@ app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // routes
 app.use(notesRoutes);
+app.use(authRoutes);
 
 // connecting to mongoDB and running server
 mongoose
