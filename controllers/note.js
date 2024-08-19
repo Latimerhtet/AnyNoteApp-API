@@ -15,6 +15,7 @@ exports.getNotes = (req, res, next) => {
       totalNotes = count;
       totalPages = Math.ceil(totalNotes / notePerPage);
       return Note.find()
+        .populate("author", "username")
         .sort({ createdAt: -1 })
         .skip((pageNo - 1) * notePerPage)
         .limit(notePerPage)
@@ -32,6 +33,7 @@ exports.getNotes = (req, res, next) => {
 
 exports.createNotes = (req, res, next) => {
   const { title, content } = req.body;
+  const userId = req.userId;
   const profile_img = req.file;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -44,6 +46,7 @@ exports.createNotes = (req, res, next) => {
     title,
     content,
     profile_img: profile_img ? profile_img.path : undefined,
+    author: userId,
   })
     .then(() => {
       return res.status(201).json({
@@ -107,7 +110,9 @@ exports.deleteNote = (req, res, next) => {
   const { id } = req.params;
   Note.findById(id)
     .then((note) => {
-      unlink(note.profile_img);
+      if (note.profile_img) {
+        unlink(note.profile_img);
+      }
       return Note.findByIdAndDelete(id).then(() => {
         return res.status(204).json({
           message: "Deleted successfully",

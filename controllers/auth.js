@@ -1,6 +1,8 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv").config();
 exports.register = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -42,20 +44,25 @@ exports.login = (req, res, next) => {
     });
   }
   const { email, password } = req.body;
-  console.log({ email, password });
+
+  let userData;
   User.findOne({ email })
     .then((userFact) => {
-      console.log(userFact);
+      userData = userFact;
       return bcrypt.compare(password, userFact.password);
     })
     .then((isMatch) => {
-      if (isMatch) {
-        return res.status(201).json({ message: "Login Successful" });
-      } else {
+      if (!isMatch) {
         return res.status(401).json({
           message: "Incorrect user credentials!",
         });
       }
+      const token = jwt.sign(
+        { email: userData.email, userId: userData._id },
+        process.env.JWT_TOKEN,
+        { expiresIn: "1h" }
+      );
+      return res.status(200).json({ token, id: userData._id });
     })
     .catch((err) => {
       console.log(err);
@@ -63,4 +70,25 @@ exports.login = (req, res, next) => {
         message: "Something went wrong",
       });
     });
+};
+
+exports.checkStatus = (req, res, next) => {
+  const authHeader = req.get("Authorization");
+  if (!authHeader) {
+    return res.status(401).json({ message: "Not authenticated!" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const tokenMatch = jwt.verify(token, process.env.JWT_TOKEN);
+    if (!tokenMatch) {
+      return res.status(401).json({ message: "Not authenticated!" });
+    }
+    req.userId = tokenMatch.userId;
+    return res.json("ok");
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.status(401).json({ message: "Not authenticated!" });
+  }
 };
