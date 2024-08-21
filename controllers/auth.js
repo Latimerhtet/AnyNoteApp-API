@@ -62,7 +62,14 @@ exports.login = (req, res, next) => {
         process.env.JWT_TOKEN,
         { expiresIn: "1h" }
       );
-      return res.status(200).json({ token, id: userData._id });
+      return res
+        .status(200)
+        .json({
+          token,
+          id: userData._id,
+          user_mail: userData.email,
+          username: userData.username,
+        });
     })
     .catch((err) => {
       console.log(err);

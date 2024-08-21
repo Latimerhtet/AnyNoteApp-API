@@ -83,6 +83,9 @@ exports.editNote = (req, res, next) => {
   const cover_img = req.file;
   Note.findById(id)
     .then((note) => {
+      if (note.author.toString() !== req.userId) {
+        return res.status(401).json({ message: "Unauthorized!" });
+      }
       note.title = title;
       note.content = content;
       if (cover_img) {
@@ -110,6 +113,9 @@ exports.deleteNote = (req, res, next) => {
   const { id } = req.params;
   Note.findById(id)
     .then((note) => {
+      if (note.author.toString() !== req.userId) {
+        return res.status(401).json({ message: "Unauthorized!" });
+      }
       if (note.profile_img) {
         unlink(note.profile_img);
       }
